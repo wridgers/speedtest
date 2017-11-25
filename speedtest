@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+github_username=${GITHUB_USERNAME:-wridgers}
+gitlab_username=${GITLAB_USERNAME:-wridgers}
+
+github_repo=${GITHUB_REPO:-speedtest}
+gitlab_repo=${GITLAB_REPO:-speedtest}
+
+clone() {
+	local remote=$1
+	local local=$2
+
+	echo -n "clone ${remote} -> ./${local}: "
+
+	/usr/bin/time -f'%E' git clone -q ${remote} ${local}
+}
+
+pull() {
+	local local=$1
+
+	echo -n "pull ./${local}: "
+
+	/usr/bin/time -f'%E' git -C ${local} pull -q
+}
+
+clone git@github.com:${github_username}/${github_repo}.git github_ssh
+clone git@gitlab.com:${gitlab_username}/${gitlab_repo}.git gitlab_ssh
+clone https://github.com/${github_username}/${github_repo}.git github_https
+clone https://gitlab.com/${gitlab_username}/${gitlab_repo}.git gitlab_https
+
+pull github_ssh
+pull gitlab_ssh
+pull github_https
+pull gitlab_https
+
+rm -rf ./github_ssh
+rm -rf ./github_https
+rm -rf ./gitlab_ssh
+rm -rf ./gitlab_https
+
